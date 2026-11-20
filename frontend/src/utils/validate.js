@@ -1,72 +1,44 @@
-export const validatePassword = (password) => {
+export const validatePassword = (password = "") => {
   const errors = [];
+  if (password.length < 8 || password.length > 16) {
+    errors.push("Password must be 8–16 characters long.");
+  }
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must include at least one uppercase letter.");
+  }
+  if (!/[^A-Za-z0-9\s]/.test(password)) {
+    errors.push("Password must include at least one special character.");
+  }
+  return { isValid: errors.length === 0, errors, message: errors[0] || "Password is valid." };
+};
 
-  if (password.length < 8)
-    errors.push("Password must be at least 8 characters long");
-  if (password.length > 50)
-    errors.push("Password must not exceed 50 characters");
-  if (!/[A-Z]/.test(password))
-    errors.push("Password must contain at least one uppercase letter");
-  if (!/[a-z]/.test(password))
-    errors.push("Password must contain at least one lowercase letter");
-  if (!/\d/.test(password))
-    errors.push("Password must contain at least one number");
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password))
-    errors.push(
-      'Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)'
-    );
+export const validateName = (name = "") => {
+  const value = name.trim();
+  if (value.length < 20 || value.length > 60) {
+    return { isValid: false, message: "Name must be between 20 and 60 characters." };
+  }
+  return { isValid: true, message: "" };
+};
 
-  return {
-    isValid: errors.length === 0,
-    errors,
-    message: errors.length === 0 ? "Password is valid" : errors[0],
-  };
+export const validateAddress = (address = "") => {
+  const value = address.trim();
+  if (!value) return { isValid: false, message: "Address is required." };
+  if (value.length > 400) {
+    return { isValid: false, message: "Address must be 400 characters or fewer." };
+  }
+  return { isValid: true, message: "" };
 };
 
 export const validateEmail = (email) => {
-  const errors = [];
-
-  if (!email || email.trim() === "") {
-    return {
-      isValid: false,
-      errors: ["Email is required"],
-      message: "Email is required",
-    };
-  }
-
-  const trimmedEmail = email.trim();
-  if (trimmedEmail.length > 254)
-    errors.push("Email address is too long (maximum 254 characters)");
-
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(trimmedEmail))
-    errors.push("Please enter a valid email address");
-  if (trimmedEmail.includes(".."))
-    errors.push("Email cannot contain consecutive dots");
-
-  const [localPart, domainPart] = trimmedEmail.split("@");
-  if (localPart) {
-    if (localPart.startsWith(".") || localPart.endsWith(".")) {
-      errors.push("Email cannot start or end with a dot before @");
-    }
-    if (localPart.length > 64) {
-      errors.push("Email local part is too long (maximum 64 characters)");
-    }
-  }
-  if (domainPart) {
-    if (domainPart.startsWith("-") || domainPart.endsWith("-")) {
-      errors.push("Domain cannot start or end with a hyphen");
-    }
-    const tld = domainPart.split(".").pop();
-    if (!tld || tld.length < 2) {
-      errors.push("Top-level domain must be at least 2 characters");
-    }
-  }
-
+  const value = typeof email === "string" ? email.trim() : "";
+  const isValid =
+    value.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) &&
+    !value.includes("..");
   return {
-    isValid: errors.length === 0,
-    errors,
-    message: errors.length === 0 ? "Email is valid" : errors[0],
-    normalizedEmail: errors.length === 0 ? trimmedEmail.toLowerCase() : null,
+    isValid,
+    errors: isValid ? [] : ["Please enter a valid email address."],
+    message: isValid ? "Email is valid." : "Please enter a valid email address.",
+    normalizedEmail: isValid ? value.toLowerCase() : null,
   };
 };

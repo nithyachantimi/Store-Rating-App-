@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { validatePassword, validateEmail } from "../utils/validate.js";
+import { validateAddress, validateEmail, validateName, validatePassword } from "../utils/validate.js";
 import { useAdminStore } from "../stores/admin.store.js";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -23,23 +23,20 @@ const AddUserPage = () => {
         const fieldErrors = {};
         switch (field) {
             case "name":
-                if (!value.trim()) fieldErrors.name = "Name is required";
-                else if (value.trim().length < 2) fieldErrors.name = "Name must be at least 2 characters";
-                else if (value.trim().length > 50) fieldErrors.name = "Name must not exceed 50 characters";
-                else if (!/^[a-zA-Z\s]+$/.test(value.trim())) fieldErrors.name = "Name can only contain letters";
+                if (!validateName(value).isValid) fieldErrors.name = validateName(value).message;
                 break;
-            case "email":
+            case "email": {
                 const emailValidation = validateEmail(value);
                 if (!emailValidation.isValid) fieldErrors.email = emailValidation.message;
                 break;
-            case "password":
+            }
+            case "password": {
                 const passwordValidation = validatePassword(value);
                 if (!passwordValidation.isValid) fieldErrors.password = passwordValidation.message;
                 break;
+            }
             case "address":
-                if (!value.trim()) fieldErrors.address = "Address is required";
-                else if (value.trim().length < 10) fieldErrors.address = "Address must be at least 10 characters";
-                else if (value.trim().length > 200) fieldErrors.address = "Address must not exceed 200 characters";
+                if (!validateAddress(value).isValid) fieldErrors.address = validateAddress(value).message;
                 break;
             case "role":
                 if (!["user", "admin", "store_owner"].includes(value))
@@ -135,20 +132,21 @@ const AddUserPage = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {[
-                            { label: "Name", key: "name", type: "text", placeholder: "Enter full name" },
+                            { label: "Name (20–60 characters)", key: "name", type: "text", placeholder: "Enter full name" },
                             { label: "Email", key: "email", type: "email", placeholder: "Enter email" },
                             {
                                 label: "Password",
                                 key: "password",
                                 type: "password",
                                 placeholder: "Enter secure password",
-                                helper: "Password must be 8-50 chars with uppercase, lowercase, number & special character",
+                                helper: "8–16 characters with at least one uppercase letter and one special character",
                             },
                         ].map(({ label, key, type, placeholder, helper }) => (
                             <div key={key}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{label} *</label>
                                 <input
                                     type={type}
+                                maxLength={key === "name" ? 60 : key === "email" ? 254 : 16}
                                     placeholder={placeholder}
                                     value={formData[key]}
                                     onChange={(e) => handleChange(key, e.target.value)}
@@ -164,6 +162,7 @@ const AddUserPage = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
                             <textarea
+                                maxLength={400}
                                 placeholder="Enter complete address"
                                 value={formData.address}
                                 onChange={(e) => handleChange("address", e.target.value)}

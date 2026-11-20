@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { useAuth } from "../stores/auth.store.js";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut, User, Sparkles } from "lucide-react";
+import { Menu, X, LogOut, User, Sparkles, UserPlus, LayoutDashboard } from "lucide-react";
 
 const useMobileMenu = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ const NavItem = React.memo(({ to, icon: Icon, children, onClick, className = "" 
         className={`flex items-center space-x-1 px-3 py-1.5 text-sm hover:text-gray-700 rounded hover:bg-gray-100 transition-colors duration-200 ${className}`}
         aria-label={typeof children === 'string' ? children : undefined}
     >
-        <Icon className="w-4 h-4" />
+        {React.createElement(Icon, { className: "w-4 h-4" })}
         <span>{children}</span>
     </Link>
 ));
@@ -28,28 +28,23 @@ export default function Navbar() {
     const logout = useAuth((state) => state.logout);
     const navigate = useNavigate();
     const mobileMenu = useMobileMenu();
+    const { close: closeMenu } = mobileMenu;
 
-    const userState = useMemo(() => ({
-        isAdmin: user?.role === 'admin',
-        isLoggedIn: !!user
-    }), [user]);
+    const userState = useMemo(() => ({ isLoggedIn: !!user }), [user]);
 
     const handleLogout = useCallback(async () => {
         try {
             await logout();
-            mobileMenu.close();
+            closeMenu();
             navigate("/", { replace: true });
         } catch (error) {
             console.error('Logout failed:', error);
         }
-    }, [logout, mobileMenu.close, navigate]);
-
-    const adminNavItems = useMemo(() => [
-        { to: "/admin/dashboard", icon: User, label: "Dashboard" }
-    ], []);
+    }, [logout, closeMenu, navigate]);
 
     const authNavItems = useMemo(() => [
-        { to: "/login", icon: User, label: "Login" }
+        { to: "/login", icon: User, label: "Sign in" },
+        { to: "/signup", icon: UserPlus, label: "Create account", primary: true }
     ], []);
 
     return (
@@ -58,18 +53,16 @@ export default function Navbar() {
                 <Link
                     to="/"
                     className="flex items-center space-x-2 text-lg font-semibold hover:text-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded"
-                    aria-label="Rating System home"
+                    aria-label="Store Rating App home"
                 >
                     <Sparkles className="w-5 h-5 text-gray-600" aria-hidden="true" />
-                    <span>Rating System</span>
+                    <span>Store Rating App</span>
                 </Link>
 
                 <div className="hidden md:flex items-center space-x-4">
                     {userState.isLoggedIn ? (
                         <div className="flex items-center space-x-1">
-                            {userState.isAdmin && adminNavItems.map(item => (
-                                <NavItem key={item.to} to={item.to} icon={item.icon}>{item.label}</NavItem>
-                            ))}
+                            <NavItem to="/" icon={LayoutDashboard}>Dashboard</NavItem>
                             <NavItem to="/profile" icon={User}>Profile</NavItem>
                             <button
                                 onClick={handleLogout}
@@ -111,9 +104,7 @@ export default function Navbar() {
                     <div className="px-4 space-y-1">
                         {userState.isLoggedIn ? (
                             <>
-                                {userState.isAdmin && adminNavItems.map(item => (
-                                    <NavItem key={item.to} to={item.to} icon={item.icon} onClick={mobileMenu.close} className="w-full justify-start py-2">{item.label}</NavItem>
-                                ))}
+                                <NavItem to="/" icon={LayoutDashboard} onClick={mobileMenu.close} className="w-full justify-start py-2">Dashboard</NavItem>
                                 <NavItem to="/profile" icon={User} onClick={mobileMenu.close} className="w-full justify-start py-2">Profile</NavItem>
                                 <button
                                     onClick={handleLogout}

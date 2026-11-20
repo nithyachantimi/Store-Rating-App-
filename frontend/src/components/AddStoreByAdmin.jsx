@@ -12,6 +12,7 @@ const AddStorePage = () => {
         owner_id: "",
     });
     const [errors, setErrors] = useState({});
+    const [submitError, setSubmitError] = useState("");
     const { adminDashboardData, adminDashboard, addStore } = useAdminStore();
     const [storeOwners, setStoreOwners] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -19,7 +20,9 @@ const AddStorePage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!adminDashboardData) adminDashboard();
+        if (!adminDashboardData) adminDashboard().catch((error) => {
+            setSubmitError(error.response?.data?.message || "Could not load store owners.");
+        });
         if (adminDashboardData?.detailed_user_list) {
             setStoreOwners(
                 adminDashboardData.detailed_user_list.filter(
@@ -38,16 +41,16 @@ const AddStorePage = () => {
         const newErrors = {};
         if (!formData.name.trim())
             newErrors.name = "Store name is required";
-        else if (formData.name.trim().length < 2)
-            newErrors.name = "Must be at least 2 characters";
+        else if (formData.name.trim().length > 60)
+            newErrors.name = "Store name must be 60 characters or fewer";
 
         if (!validateEmail(formData.email).isValid)
             newErrors.email = "Invalid email address";
 
         if (!formData.address.trim())
             newErrors.address = "Store address is required";
-        else if (formData.address.trim().length < 15)
-            newErrors.address = "Address must be at least 15 characters";
+        else if (formData.address.trim().length > 400)
+            newErrors.address = "Address must be 400 characters or fewer";
 
         if (!formData.owner_id) newErrors.owner_id = "Select a store owner";
 
@@ -60,6 +63,7 @@ const AddStorePage = () => {
         if (!validateAllFields()) return;
 
         setLoading(true);
+        setSubmitError("");
 
         const normalizedEmail = validateEmail(formData.email).normalizedEmail;
         const payload = {
@@ -76,6 +80,7 @@ const AddStorePage = () => {
             navigate("/admin/dashboard");   // ✅ Redirect without alert
         } catch (err) {
             console.error("Error adding store:", err);
+            setSubmitError(err.response?.data?.message || "Could not create the store.");
         } finally {
             setLoading(false);
         }
@@ -114,6 +119,7 @@ const AddStorePage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
+                        {submitError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{submitError}</p>}
                         {/* Name */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -121,6 +127,7 @@ const AddStorePage = () => {
                             </label>
                             <input
                                 type="text"
+                                maxLength={60}
                                 value={formData.name}
                                 onChange={(e) => handleInputChange("name", e.target.value)}
                                 className={inputClass("name")}
@@ -141,6 +148,7 @@ const AddStorePage = () => {
                             </label>
                             <input
                                 type="email"
+                                maxLength={254}
                                 value={formData.email}
                                 onChange={(e) => handleInputChange("email", e.target.value)}
                                 className={inputClass("email")}
@@ -163,6 +171,7 @@ const AddStorePage = () => {
                                 value={formData.address}
                                 onChange={(e) => handleInputChange("address", e.target.value)}
                                 rows={3}
+                                maxLength={400}
                                 className={`${inputClass("address")} resize-none`}
                                 placeholder="Enter complete store address"
                                 disabled={loading}

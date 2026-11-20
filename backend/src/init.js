@@ -1,18 +1,17 @@
 import pool from "./config/db.js";
-import { initializeDummyUsers } from "./initializeDummyUsers.js";
+import { initializeAdminUser } from "./initializeAdminUser.js";
 
 const initDB = async () => {
-  try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        name VARCHAR(60) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(255) NOT NULL,
         address VARCHAR(400),
         role ENUM('user', 'admin', 'store_owner') DEFAULT 'user',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
+      ) ENGINE=InnoDB
     `);
 
     await pool.query(`
@@ -23,7 +22,7 @@ const initDB = async () => {
       address VARCHAR(400),
       owner_id INT,
       FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
-      )
+      ) ENGINE=InnoDB
     `);
 
     await pool.query(`
@@ -36,16 +35,11 @@ const initDB = async () => {
       FOREIGN KEY (user_id) REFERENCES users(id),
       FOREIGN KEY (store_id) REFERENCES stores(id),
       UNIQUE (user_id, store_id)
-      )
+      ) ENGINE=InnoDB
     `);
 
-    console.log("Initialization Done...");
-    initializeDummyUsers();
-    // process.exit(0);
-  } catch (error) {
-    console.error("Error creating tables:", error);
-    process.exit(1);
-  }
+    await initializeAdminUser();
+    console.log("Database schema and administrator account are ready.");
 };
 
 export default initDB;

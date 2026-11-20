@@ -1,10 +1,10 @@
-# Rating System
+# Store Rating App
 
 A Full Stack Web Application that allows users to register, submit ratings for stores, and manage operations through role-based access control.
 
 ## Project Overview
 
-The Rating System enables users to rate stores (1–5 stars), explore stores by name or address, and interact with the platform based on their roles. The platform offers:
+The Store Rating App enables users to rate stores (1–5 stars), explore stores by name or address, and interact with the platform based on their roles. The platform offers:
 
 - Clean architecture with modular components
 - Secure authentication and password validation
@@ -23,34 +23,19 @@ Roles include System Administrator, Normal User, and Store Owner, each with tail
 
 ### Demo Credentials:
 
-#### Admin
-- **Email:** roxiler_admin@gmail.com
-- **Password:** Roxiler@123
+#### Local administrator
+- **Email:** appadmin@gmail.com
+- **Password:** Set locally in `backend/.env.local` as `ADMIN_PASSWORD`.
 
 **Capabilities:**
-- Create and manage stores and users (normal and admin)
+- Create and manage stores and users (normal, admin, and store owner)
 - View dashboards showing total users, stores, and ratings
 - Filter, search, and manage users and stores
 - Access detailed user and store information
 
-#### Store Owner
-- **Email:** roxiler_store@gmail.com
-- **Password:** Roxiler@123
-
-**Capabilities:**
-- Log in and update password
-- View users who rated their store
-- Check average store rating
-
-#### Normal User
-- **Email:** roxiler_user@gmail.com
-- **Password:** Roxiler@123
-
-**Capabilities:**
-- Sign up and log in
-- Browse and search stores by name or address
-- Submit and edit ratings (1–5)
-- Update password securely
+#### Normal User and Store Owner
+- Normal users create an account through the sign-up page.
+- Administrators can add store owner accounts and assign stores.
 
 ## Key Features
 
@@ -79,15 +64,18 @@ Roles include System Administrator, Normal User, and Store Owner, each with tail
 
 ### 1️⃣ Configure Environment Variables
 
-Create a `.env` file in the backend folder with the following content:
+Create a `.env.local` file in the backend folder with your local MySQL credentials:
 
 ```env
 PORT=5000
-DB_HOST=host_name
-DB_USER=user_name
-DB_PASS=your_password
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASS=your_mysql_password
 DB_NAME=rating_system
-JWT_SECRET=your_jwt_secret_key
+DB_PORT=3306
+JWT_SECRET=your_local_jwt_secret
+ADMIN_EMAIL=appadmin@gmail.com
+ADMIN_PASSWORD=choose_a_local_password
 ```
 
 ### 2️⃣ Clone the Repository
@@ -120,24 +108,24 @@ Access the backend API at: [http://localhost:5000](http://localhost:5000)
 
 ### **Authentication**
 
-* `POST /api/auth/signup` - User registration
-* `POST /api/auth/login` - User login
-* `POST /api/auth/logout` - User logout
-* `PUT /api/auth/update-password` - Update user password
-* `GET /api/auth/check` - Check authentication status
+* `POST /auth/signup` - User registration
+* `POST /auth/login` - User login
+* `POST /auth/logout` - User logout
+* `PUT /auth/update-password` - Update user password
+* `GET /auth/check` - Check authentication status
 
 ### **Admin** (Admin only)
 
-* `POST /api/admin/stores` - Create new store
-* `POST /api/admin/users` - Create new user
-* `GET /api/admin/dashboard` - Get admin dashboard data
+* `POST /admin/stores` - Create new store
+* `POST /admin/users` - Create new user
+* `GET /admin/dashboard` - Get admin dashboard data
 
 ### **Store Owner** (Store Owner only)
 
-* `GET /api/owner/dashboard` - Get store ratings and user data
+* `GET /owner/dashboard` - Get store ratings and user data
 
 ### **Users** (User only)
 
-* `GET /api/user/stores` - Get all stores with filtering and search
-* `POST /api/user/stores/:id/rating` - Submit rating for a store
-* `PUT /api/user/stores/:id/rating` - Update existing rating for a store
+* `GET /user/stores` - Get all stores with filtering and search
+* `POST /user/stores/:id/rating` - Submit rating for a store
+* `PUT /user/stores/:id/rating` - Update existing rating for a store

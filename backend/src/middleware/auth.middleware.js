@@ -2,14 +2,12 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import pool from "../config/db.js";
 
-dotenv.config();
+dotenv.config({ path: [".env.local", ".env"] });
 
 export const protectRoute = (allowedRoles = []) => {
   return async (req, res, next) => {
     try {
-      console.log("Protect Route Middleware Accessed");
       const token = req.cookies?.jwt;
-      console.log("Token is: ", token);
 
       if (!token) {
         return res.status(401).json({
@@ -45,13 +43,15 @@ export const protectRoute = (allowedRoles = []) => {
           message: "Forbidden - You do not have access to this resource",
         });
       }
-      console.log(rows[0].role, " Pass -> next");
       next();
     } catch (error) {
+      if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+        return res
+          .status(401)
+          .json({ success: false, message: "Unauthorized - Invalid or expired token" });
+      }
       console.error("Error in protectRoute Middleware:", error.message);
-      res
-        .status(500)
-        .json({ success: false, message: "Internal Server Error" });
+      return res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
 };

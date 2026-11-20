@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createElement } from "react";
 import {
     Users,
     Store,
@@ -24,7 +24,7 @@ const StatCard = ({ title, value, icon: IconComponent }) => (
             {/* Icon Section */}
             <div className="flex-shrink-0">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center group-hover:from-gray-200 group-hover:to-gray-300 transition-all duration-300">
-                    <IconComponent className="w-8 h-8 sm:w-10 sm:h-10 text-gray-700" />
+                    {createElement(IconComponent, { className: "w-8 h-8 sm:w-10 sm:h-10 text-gray-700" })}
                 </div>
             </div>
         </div>
@@ -74,12 +74,15 @@ const NavigationTabs = ({ tabs, activeTab, onTabChange }) => (
 
 export default function AdminDashboard() {
     const { adminDashboardData, loading, adminDashboard } = useAdminStore();
+    const [loadError, setLoadError] = useState("");
     const [activeTab, setActiveTab] = useState("overview");
     const [storeFilter, setStoreFilter] = useState({ name: "", email: "", address: "" });
     const [userFilter, setUserFilter] = useState({ name: "", email: "", address: "", role: "" });
 
     useEffect(() => {
-        adminDashboard();
+        adminDashboard().catch((error) => {
+            setLoadError(error.response?.data?.message || "Could not load the dashboard.");
+        });
     }, [adminDashboard]);
 
     if (loading && !adminDashboardData) {
@@ -101,16 +104,12 @@ export default function AdminDashboard() {
     const detailedUsers = adminDashboardData?.detailed_user_list || [];
     const storeList = adminDashboardData?.store_list || [];
 
-    const userRatings = detailedUsers.reduce((map, user) => {
-        if (user.role === "store_owner") map[user.id] = user.rating || "-";
-        return map;
-    }, {});
-
     const storesData = storeList.map(store => ({
+        id: store.id,
         Name: store.name,
-        Email: store.email,
-        Address: store.address,
-        Rating: userRatings[store.owner_id] || "-"
+        Email: store.email || "",
+        Address: store.address || "",
+        Rating: store.rating ?? "-"
     }));
 
     const filteredStores = storesData.filter(store =>
@@ -120,6 +119,7 @@ export default function AdminDashboard() {
     );
 
     const usersData = detailedUsers.map(user => ({
+        id: user.id,
         Name: user.name,
         Email: user.email,
         Address: user.address,
@@ -144,6 +144,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-gray-50">
             <NavigationTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                {loadError && <p role="alert" className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-800">{loadError}</p>}
                 {activeTab === "overview" && (
                     <div className="space-y-6 sm:space-y-8">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">

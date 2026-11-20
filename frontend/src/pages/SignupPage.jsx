@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../stores/auth.store.js";
-import { validatePassword } from "../utils/validate.js";
+import { validateAddress, validateEmail, validateName, validatePassword } from "../utils/validate.js";
 import {
     User,
     Mail,
@@ -22,7 +22,6 @@ export default function SignupPage() {
         password: "",
         confirmPassword: "",
         address: "",
-        role: "user",
     });
     const [errors, setErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
@@ -38,11 +37,11 @@ export default function SignupPage() {
 
     const validateForm = () => {
         const errs = {};
-        if (!form.name.trim()) errs.name = "Required";
-        else if (form.name.trim().length < 2) errs.name = "Too short";
+        const nameValidation = validateName(form.name);
+        if (!nameValidation.isValid) errs.name = nameValidation.message;
 
-        if (!form.email) errs.email = "Required";
-        else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid";
+        const emailValidation = validateEmail(form.email);
+        if (!emailValidation.isValid) errs.email = emailValidation.message;
 
         const { isValid, message } = validatePassword(form.password);
         if (!isValid) errs.password = message;
@@ -51,8 +50,8 @@ export default function SignupPage() {
         else if (form.password !== form.confirmPassword)
             errs.confirmPassword = "Mismatch";
 
-        if (!form.address.trim()) errs.address = "Required";
-        else if (form.address.trim().length < 5) errs.address = "Incomplete";
+        const addressValidation = validateAddress(form.address);
+        if (!addressValidation.isValid) errs.address = addressValidation.message;
 
         return errs;
     };
@@ -67,11 +66,19 @@ export default function SignupPage() {
         setIsLoading(true);
         setErrors({});
         try {
-            const { confirmPassword, ...signupData } = form;
-            await signup(signupData);
+            const signupData = Object.fromEntries(
+                Object.entries(form).filter(([key]) => key !== "confirmPassword")
+            );
+            const emailValidation = validateEmail(signupData.email);
+            await signup({
+                ...signupData,
+                name: signupData.name.trim(),
+                email: emailValidation.normalizedEmail,
+                address: signupData.address.trim(),
+            });
         } catch (err) {
             setErrors({
-                submit: err.message || "Signup failed",
+                submit: err.response?.data?.message || err.message || "Signup failed",
             });
         } finally {
             setIsLoading(false);
@@ -121,7 +128,7 @@ export default function SignupPage() {
             </label>
             <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Icon className="w-5 h-5 text-gray-400" />
+                    {createElement(Icon, { className: "w-5 h-5 text-gray-400" })}
                 </div>
                 <input
                     id={id}
@@ -129,6 +136,7 @@ export default function SignupPage() {
                     type={toggle && show ? "text" : type}
                     autoComplete={autoComplete}
                     required
+                    maxLength={name === "name" ? 60 : name === "email" ? 254 : name === "address" ? 400 : 16}
                     value={form[name]}
                     onChange={handleChange}
                     className={inputClass(name)}
@@ -157,9 +165,9 @@ export default function SignupPage() {
                         id: "name",
                         name: "name",
                         type: "text",
-                        label: "Full Name",
+                        label: "Full Name (20–60 characters)",
                         autoComplete: "name",
-                        placeholder: "Enter your name",
+                        placeholder: "Enter your full name",
                         icon: User,
                     })}
                     {renderInput({

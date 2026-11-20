@@ -6,7 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import ownerRoutes from "./routes/owner.routes.js";
-dotenv.config();
+dotenv.config({ path: [".env.local", ".env"] });
 const app = express();
 app.use(express.json());
 app.use(

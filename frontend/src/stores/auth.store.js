@@ -56,7 +56,7 @@ export const useAuth = create((set, get) => ({
     try {
       const res = await api.put("/auth/update-password", formData);
       return {
-        success: res.data.success || true,
+        success: Boolean(res.data.success),
         message: res.data.message || "Password updated successfully",
       };
     } catch (err) {
