@@ -81,7 +81,7 @@ ADMIN_PASSWORD=choose_a_local_password
 ### 2️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/suraj-shrivastav/Roxiler.git
+git clone https://github.com/nithyachantimi/Store-Rating-App-.git
 ```
 
 ### 3️⃣ Install and Run the Frontend
